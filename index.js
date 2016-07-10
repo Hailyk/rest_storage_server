@@ -9,7 +9,6 @@ const db_url = 'mongodb://192.168.99.100',
 var express = require('express'),
     mongoClient = require('mongodb').MongoClient,
     multer = require('multer'),
-    bodyParser = require('body-parser'),
     utils = require('./utils');
 
 // instance variable
@@ -23,9 +22,6 @@ var server = express(),
         }
     })});
 
-server.use(bodyParser.json());
-server.use(bodyParser.urlencoded({ extended: true }));
-
 run();
 
 function run(){
@@ -38,7 +34,18 @@ function run(){
 
     // post request
     server.post('/', upload.single('media'), (req, res, next)=>{
-        postHandler(req,res);
+        var type = req.query.type;
+        if(type == "file")
+            postFileHandler(req,res);
+        else if(type == "data" ){
+            postDataHandler(req, res);
+        }
+        else{
+            res.send({
+                error: true,
+                response: "request type not specified"
+            });
+        }
         next();
     });
 
@@ -67,11 +74,47 @@ function getHandler(request, response){
     if(request.query != {}) {
 
         var ref = request.query.r;
-        if(ref != null) {
-            
+        var query = request.query.q;
+        if(ref != null || query != null) {
+
+            var filter = {};
+
+            if(ref !=null) {
+                filter = {
+                    reference: ref
+                };
+            } else {
+                filter = query;
+            }
+
             mongoClient.connect(db_url, (err, db)=> {
                 db.collection('metadata').find(filter).toArray((err, res)=> {
-            
+                    if(err){
+                        response.send({
+                            error: true,
+                            message: "Error on lookup"
+                        });
+                    } else {
+                        var meta = request.query.m;
+                        if(meta == null){
+                            meta = true;
+                        }
+                        if(!meta){
+                            response.sendfile(storage_location + res[0].filename, (err)=>{
+                                if(err){
+                                    response.send({
+                                        error:true,
+                                        response: "failed to send file"
+                                    });
+                                }
+                            });
+                        } else {
+                            response.send({
+                                error: false,
+                                response: res
+                            });
+                        }
+                    }
                 });
             });
             
@@ -88,58 +131,212 @@ function getHandler(request, response){
 
 // @arg request, object
 // @arg response, object
-function postHandler(request, response){
-    //---- development
-    console.log(request.file);
-    console.log(request.body);
-
-    var time = new Date();
-
-    var body = request.json(request.body);
-
-    var reference = utils.getRandomString(5)+ time.getTime()+utils.getRandomString(17);
-
-    var data = {
-        time:{
-            timestamp: body.time.timestamp || time.getTime(),
-            year: body.time.year || time.getFullYear(),
-            month: body.time.month || time.getMonth(),
-            date: body.time.date || time.getDate(),
-            weekDay: body.time.weekDay || time.getDay(),
-            hour: body.time.hour || time.getHours(),
-            minute: body.time.minute || time.getMinutes(),
-            second: body.time.second || time.getSeconds(),
-            millisecond: body.time.millisecond || time.getMilliseconds(),
-            offset: body.time.offset || time.getTimezoneOffset()
-        },
-        author: body.author || null,
-        tags: body.tag || [],
-        size: request.file.size || null,
-        fileType: request.file.mimetype || null,
-        fileName: request.file.filename || null,
-        reference: reference,
-
-    };
-
-    try {
-        mongoClient.connect(db_url, (err, db)=> {
-            db.collection('metadata').insertOne(data, (err, res)=> {
-                if (err) {
-                    response.send({
-                        error: true,
-                        response: "Error creating entries in to database(lost resource)"
-                    });
-                } else {
-                    response.send({
-                        error: false,
-                        response: res
-                    });
-                }
-                    
-            });
+function postFileHandler(request, response){
+    var reference = request.query.r;
+    
+    if(reference == undefined){
+        reference = utils.getRandomString(5)+Date.now()+utils.getRandomString(8);
+        mongoClient.connect(db_url, (err, db)=>{
+            if(err){
+                response.send({
+                    error:true,
+                    response:"failed on db connect(stale file)"
+                });
+            } else {
+                db.collection("metadata").insertOne({
+                    reference:reference,
+                    filename: request.file.filename,
+                    author:null,
+                    time:{
+                        timestamp:null,
+                        year:null,
+                        month:null,
+                        date:null,
+                        day:null,
+                        hour:null,
+                        minute:null,
+                        second:null,
+                        offset:null
+                    },
+                    size:request.file.size,
+                    tags:null,
+                    description: null
+                },(err, data)=>{
+                    if(err){
+                        response.send({
+                            error:true,
+                            response: "error entering data(stale file)"
+                        });
+                    } else {
+                        response.send({
+                            error:false,
+                            response:reference
+                        });
+                    }
+                });
+            }
         });
-    } catch (err) {
-        response.send(err);
+    } else {
+        mongoClient.connect(db_url,(err,db)=>{
+            if(err){
+                response.send({
+                    error:true,
+                    response:"failed on db connect(stale file)"
+                });
+            } else {
+                db.collection("metadata").updateMany({reference:reference},{
+                    $set:{
+                        filename:request.file.filename,
+                        size:request.file.size
+                    }
+                },(err,data)=>{
+                    if(err){
+                        response.send({
+                            error:true,
+                            response: "failed to merge file with data(stale file)"
+                        });
+                    } else {
+                        response.send({
+                            error:false,
+                            response: "success"
+                        })
+                    }
+                });
+            }
+            
+        });
+        
+    }
+}
+
+function postDataHandler(request, response){
+    var reference = request.query.r;
+    
+    if(reference == undefined){
+        reference = utils.getRandomString(5)+Date.now()+utils.getRandomString(8);
+        
+        var data = JSON.parse(request.body);
+        
+        var time = new Date();
+        
+        var author = data.author || null;
+        var tags = data.tags || [];
+        var description = data.description || null;
+        var timestamp = data.time.timestamp || time.getTime();
+        var year = data.time.year || time.getFullYear();
+        var month = data.time.month || time.getMonth();
+        var date = data.time.date || time.getDate();
+        var day = data.time.day || time.getDay();
+        var hour = data.time.hour || time.getHours();
+        var minute = data.time.minute || time.getMinutes();
+        var second =  data.time.second || time.getSeconds();
+        var offset = data.time.offset || time.getTimezoneOffset();
+        
+        var constructedJson = {
+            reference: reference,
+            filename: null,
+            author: author,
+            time:{
+                timestamp: timestamp,
+                year: year,
+                month: month,
+                date: date,
+                day: day,
+                hour: hour,
+                minute: minute,
+                second: second,
+                offset: offset
+            },
+            size: null,
+            tags:tags,
+            description: description
+        };
+        
+        mongoClient.connect(db_url,(err, db)=>{
+            if(err){
+                response.send({
+                    error:true,
+                    response: "failed to connect to db"
+                });
+            } else {
+                db.collection("metadata").insertOne(constructedJson, (err, data)=>{
+                    if(err){
+                        response.send({
+                            error:true,
+                            response:"error on inserting data"
+                        });
+                    } else {
+                        response.send({
+                            error:false,
+                            response:reference
+                        });
+                    }
+                });
+            }
+        });
+        
+    } else {
+    
+        var data = JSON.parse(request.body);
+    
+        var time = new Date();
+    
+        var author = data.author || null;
+        var tags = data.tags || [];
+        var description = data.description || null;
+        var timestamp = data.time.timestamp || time.getTime();
+        var year = data.time.year || time.getFullYear();
+        var month = data.time.month || time.getMonth();
+        var date = data.time.date || time.getDate();
+        var day = data.time.day || time.getDay();
+        var hour = data.time.hour || time.getHours();
+        var minute = data.time.minute || time.getMinutes();
+        var second =  data.time.second || time.getSeconds();
+        var offset = data.time.offset || time.getTimezoneOffset();
+        
+        mongoClient.connect(db_url, (err, db)=>{
+            if(err){
+                response.send({
+                    error:true,
+                    response:"unable to connect to db"
+                })
+            } else {
+                
+                var timeJson = {
+                    timestamp:timestamp,
+                    year:year,
+                    month:month,
+                    date:date,
+                    day:day,
+                    hour:hour,
+                    minute:minute,
+                    second:second,
+                    offset:offset
+                };
+                
+                db.collection("metadata").updateMany({reference:reference},{
+                    $set:{
+                        author:author,
+                        tags:tags,
+                        description:description,
+                        time: timeJson
+                    }
+                }, (err,data)=>{
+                    if(err){
+                        response.send({
+                            error:true,
+                            response:"error updating data"
+                        });
+                    } else {
+                        response.send({
+                            error:false,
+                            response:"success"
+                        });
+                    }
+                });
+            }
+        });
+        
     }
 }
 

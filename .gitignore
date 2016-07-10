@@ -90,4 +90,4 @@ jspm_packages
 # test envs
 /uploads
 /mediaStorage
-test.js
+test.*
