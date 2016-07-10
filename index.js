@@ -1,30 +1,35 @@
 'use strict';
 
 // constants
-const db_url = 'mongo://192.168.99.100',
+const db_url = 'mongodb://192.168.99.100',
     storage_location = "mediaStorage/",
     port = process.env.port || 80;
 
 // dependency declaration
 var express = require('express'),
-    mongo = require('mongodb').MongoClient(),
-    multer = require('multer');
+    mongoClient = require('mongodb').MongoClient,
+    multer = require('multer'),
+    bodyParser = require('body-parser'),
+    utils = require('./utils');
 
 // instance variable
 var server = express(),
-    upload = multer({dest: multer.diskStorage({
+    upload = multer({storage: multer.diskStorage({
         destination: function (req, file, cb) {
             cb(null, storage_location)
         },
         filename: function (req, file, cb) {
-            cb(null, Date.now() + "-"+ getRandomString(5) + getExtension(file.fieldname))
+            cb(null, Date.now()+utils.getRandomString(6)+utils.getExtension(file.originalname))
         }
     })});
+
+server.use(bodyParser.json());
+server.use(bodyParser.urlencoded({ extended: true }));
 
 run();
 
 function run(){
-
+    
     //get request
     server.get('/',(req, res, next)=>{
         getHandler(req, res);
@@ -59,12 +64,26 @@ function run(){
 // @arg response, object
 function getHandler(request, response){
 
-    mongo.connect(db_url,(err, db)=>{
-        db.collection('metadata').find(filter).toArray((err,res)=>{
-            
-        });
-    });
+    if(request.query != {}) {
 
+        var ref = request.query.r;
+        if(ref != null) {
+            
+            mongoClient.connect(db_url, (err, db)=> {
+                db.collection('metadata').find(filter).toArray((err, res)=> {
+            
+                });
+            });
+            
+        } else {
+            response.send({
+                error: true,
+                response: "no query(q) object"
+            });
+        }
+    } else {
+        response.send("you are connected, now give me a reference");
+    }
 }
 
 // @arg request, object
@@ -74,15 +93,54 @@ function postHandler(request, response){
     console.log(request.file);
     console.log(request.body);
 
-    mongo.connect(db_url,(err, db)=>{
-        db.collection('metadata').insertOne( data ,(err,res)=>{
-            if (err) console.log(err);
+    var time = new Date();
 
+    var body = request.json(request.body);
 
+    var reference = utils.getRandomString(5)+ time.getTime()+utils.getRandomString(17);
+
+    var data = {
+        time:{
+            timestamp: body.time.timestamp || time.getTime(),
+            year: body.time.year || time.getFullYear(),
+            month: body.time.month || time.getMonth(),
+            date: body.time.date || time.getDate(),
+            weekDay: body.time.weekDay || time.getDay(),
+            hour: body.time.hour || time.getHours(),
+            minute: body.time.minute || time.getMinutes(),
+            second: body.time.second || time.getSeconds(),
+            millisecond: body.time.millisecond || time.getMilliseconds(),
+            offset: body.time.offset || time.getTimezoneOffset()
+        },
+        author: body.author || null,
+        tags: body.tag || [],
+        size: request.file.size || null,
+        fileType: request.file.mimetype || null,
+        fileName: request.file.filename || null,
+        reference: reference,
+
+    };
+
+    try {
+        mongoClient.connect(db_url, (err, db)=> {
+            db.collection('metadata').insertOne(data, (err, res)=> {
+                if (err) {
+                    response.send({
+                        error: true,
+                        response: "Error creating entries in to database(lost resource)"
+                    });
+                } else {
+                    response.send({
+                        error: false,
+                        response: res
+                    });
+                }
+                    
+            });
         });
-    });
-    
-    response.send("hello world");
+    } catch (err) {
+        response.send(err);
+    }
 }
 
 // @arg request, object
@@ -92,7 +150,7 @@ function putHandler(request, response){
     console.log(request.file);
     console.log(request.body);
 
-    mongo.connect(db_url,(err, db)=>{
+    mongoClient.connect(db_url,(err, db)=>{
         db.collection('metadata').updateMany(filter,{$set:data},(err, res)=>{
             
         });
@@ -105,36 +163,10 @@ function putHandler(request, response){
 // @arg response, object
 function delHandler(request, response){
 
-    mongo.connect(db_url,(err, db)=>{
+    mongoClient.connect(db_url,(err, db)=>{
         db.collection('metadata').deleteMany(filter, (err, res)=>{
             
         });
     });
 
-}
-
-// @arg fileName, String
-// @return String extension
-function getExtension(fileName){
-    fileName.split(".");
-    return "."+fileName[fileName.length--];
-}
-
-// @arg length, int
-// @return, string
-function getRandomString(length){
-    var directory = ["0","1","2","3","4","5","6","7","8","9",
-        "a","b","c","d","e","f","g","h","i","j","k","l","m","n",
-        "o","p","q","r","s","t","u","v","w","x","y","z","A","B",
-        "C","D","E","G","H","I","J","K","L","M","N","O","P","Q",
-        "R","S","T","U","V","W","X","Y","Z"];
-
-    var randomString = "";
-
-    for(var i=0;i<length;i++){
-        var n = Math.floor(Math.random() * (directory.length));
-        randomString+=directory[n];
-    }
-
-    return randomString;
 }
