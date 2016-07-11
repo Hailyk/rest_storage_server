@@ -1,3 +1,4 @@
+'use strict';
 // @arg fileName, String
 // @return String extension
 exports.getExtension = function(fileName){
