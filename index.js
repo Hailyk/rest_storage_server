@@ -4,7 +4,7 @@
 const db_url = 'mongodb://192.168.99.100',
     storage_location = "mediaStorage/",
     port = process.env.port || 80,
-    db_collection = 'metaData';
+    db_collection = 'mediaData';
 
 // dependency declaration
 var express = require('express'),
@@ -28,42 +28,102 @@ run();
 function run(){
     
     mongoClient.connect(db_url, (err, db)=> {
-        if(err){
+        if (err) {
             throw err
         } else {
             var collection = db.collection(db_collection);
+
+
             //get request
-            server.get('/', (req, res, next)=> {
+            server.get('/', (req, res)=> {
+                var reference = req.query.r;
+                var query = req.query.q;
+                var type = req.query.t;
 
-            });
-    
-            // post request
-            server.post('/', upload.single('media'), (req, res)=> {
-                console.log(req.file);
-                var body = JSON.parse(req.body.metainfo);
-                if(req.file != {} || req.file != undefined || req.file != null) {
-
-                    var insertData = schemaConstructor(body,req.file, 18);
-
-                    collection.insertOne(insertData,(err, result)=>{
+                if(reference != undefined){
+                    if(type == "data"){
+                        collection.find({reference:reference}).toArray((err,docs)=>{
+                            if(err){
+                                res.send({
+                                    error:true,
+                                    data:"failed to query reference"
+                                });
+                            } else {
+                                res.send({
+                                    err:false,
+                                    data:docs[0]
+                                });
+                            }
+                        });
+                    } else {
+                        collection.find({reference:reference}).toArray((err,docs)=>{
+                            if(err){
+                                res.send({
+                                    error:true,
+                                    data:"failed to query reference"
+                                });
+                            } else {
+                                var file = docs[0].filename;
+                                res.sendFile(__dirname+"/"+storage_location+file, (err)=>{
+                                   if(err){
+                                       console.log(err);
+                                   }
+                                });
+                            }
+                        });
+                    }
+                } else if (query != undefined){
+                    collection.find().toArray((err,docs)=>{
                         if(err){
                             res.send({
                                 error:true,
-                                data:"failed to insert reference to record"
+                                data:"failed to query reference"
                             });
                         } else {
                             res.send({
                                 error:false,
-                                data:result
+                                data:docs
                             });
                         }
                     });
-
                 } else {
+                    res.send({
+                        error: true,
+                        data: "reference or query not set"
+                    });
+                }
+
+            });
+
+
+            // post request
+            server.post('/', upload.single('media'), (req, res, next)=> {
+                console.log(req.file);
+                console.log(req.body);
+                var body = JSON.parse(req.body.metainfo);
+                if (req.file == {} || req.file == null) {
                     res.send({
                         error: true,
                         data: "no file found"
                     });
+                } else {
+                    var reference = Date.now() + utils.getRandomString(18);
+                    var insertData = schemaConstructor(body, req.file, reference);
+
+                    collection.insertOne(insertData, (err, result)=> {
+                        if (err) {
+                            res.send({
+                                error: true,
+                                data: "failed to insert reference to record"
+                            });
+                        } else {
+                            res.send({
+                                error: false,
+                                data: reference
+                            });
+                        }
+                    });
+
                 }
             });
         }
@@ -74,8 +134,7 @@ function run(){
     });
 }
 
-function schemaConstructor(body,file, randomStringLength){
-    var reference = Date.now() + utils.getRandomString(randomStringLength);
+function schemaConstructor(body,file, reference){
     var time = new Date();
     return {
         reference: reference,
