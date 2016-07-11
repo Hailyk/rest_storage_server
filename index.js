@@ -10,7 +10,9 @@ const db_url = 'mongodb://192.168.99.100',
 var express = require('express'),
     mongoClient = require('mongodb').MongoClient,
     multer = require('multer'),
-    utils = require('./utils');
+    utils = require('./utils'),
+    async = require('async'),
+    fs = require('fs');
 
 // instance variable
 var server = express(),
@@ -97,9 +99,7 @@ function run(){
 
 
             // post request
-            server.post('/', upload.single('media'), (req, res, next)=> {
-                console.log(req.file);
-                console.log(req.body);
+            server.post('/', upload.single('media'), (req, res)=> {
                 var body = JSON.parse(req.body.metainfo);
                 if (req.file == {} || req.file == null) {
                     res.send({
@@ -110,7 +110,7 @@ function run(){
                     var reference = Date.now() + utils.getRandomString(18);
                     var insertData = schemaConstructor(body, req.file, reference);
 
-                    collection.insertOne(insertData, (err, result)=> {
+                    collection.insertOne(insertData, (err)=> {
                         if (err) {
                             res.send({
                                 error: true,
@@ -126,8 +126,113 @@ function run(){
 
                 }
             });
+
+            // put request
+            server.put('/', upload.single('media'), (req,res)=>{
+                var reference = req.query.r;
+                var query = req.query.q;
+
+                var body = JSON.parse(req.body.metainfo);
+
+                var filter = {};
+
+                var c = false;
+
+                if(reference != undefined){
+                    filter = {reference:reference};
+                    c = true;
+                } else if(query != undefined){
+                    filter = query;
+                    c = true;
+                } else {
+                    res.send({
+                        error:true,
+                        data: "reference or query not set"
+                    });
+                }
+
+                if(c){
+                    collection.updateMany(filter, {$set: body}, (err, docs)=>{
+                        if(err){
+                            res.send({
+                                error: true,
+                                data: "error on updating docs"
+                            });
+                        } else {
+                            res.send({
+                                error: false,
+                                data: docs
+                            });
+                        }
+                    });
+                }
+            });
+
+            // del request
+            server.delete('/',(req,res)=>{
+                var reference = req.query.r;
+                var query = req.query.q;
+
+                var filter = {};
+
+                var c = false;
+
+                if(reference != undefined){
+                    filter = {reference:reference};
+                    c = true;
+                } else if(query != undefined){
+                    filter = query;
+                    c = true;
+                } else {
+                    res.send({
+                        error:true,
+                        data: "reference or query not set"
+                    });
+                }
+
+                if(c){
+                    collection.find(filter).toArray((err, docs)=>{
+                        if(err){
+                            res.send({
+                                error:true,
+                                data: "error on querying info"
+                            });
+                        } else {
+                            var file = docs[0].filename;
+                            async.parallel([
+                                function(callback){
+                                    fs.unlink(__dirname+'/'+storage_location+file, (err, result)=>{
+                                        callback(err, result);
+                                    });
+                                },
+                                function(callback){
+                                    collection.deleteMany(filter,(err, docs)=>{
+                                        callback(err, docs);
+                                    });
+                                }
+                            ],(err,result)=>{
+                                if(err){
+                                    res.send({
+                                        error:true,
+                                        data: err
+                                    });
+                                } else {
+                                    res.send({
+                                        error:false,
+                                        data: result[1]
+                                    });
+                                }
+                            });
+
+
+                        }
+                    });
+                }
+            });
+
         }
     });
+
     server.listen(port, (err)=>{
         if(err) throw err;
         console.log("server listening on port: "+port);
