@@ -198,33 +198,40 @@ function run(){
                                 data: "error on querying info"
                             });
                         } else {
-                            var file = docs[0].filename;
-                            async.parallel([
-                                function(callback){
-                                    fs.unlink(__dirname+'/'+storage_location+file, (err, result)=>{
-                                        callback(err, result);
-                                    });
-                                },
-                                function(callback){
-                                    collection.deleteMany(filter,(err, docs)=>{
-                                        callback(err, docs);
-                                    });
-                                }
-                            ],(err,result)=>{
-                                if(err){
-                                    res.send({
-                                        error:true,
-                                        data: err
-                                    });
-                                } else {
-                                    res.send({
-                                        error:false,
-                                        data: result[1]
-                                    });
-                                }
-                            });
+                            var file ="";
 
-
+                            try{
+                                file = docs[0].filename;
+                                async.parallel([
+                                    function(callback){
+                                        fs.unlink(__dirname+'/'+storage_location+file, (err, result)=>{
+                                            callback(err, result);
+                                        });
+                                    },
+                                    function(callback){
+                                        collection.deleteMany(filter,(err, docs)=>{
+                                            callback(err, docs);
+                                        });
+                                    }
+                                ],(err,result)=>{
+                                    if(err){
+                                        res.send({
+                                            error:true,
+                                            data: err
+                                        });
+                                    } else {
+                                        res.send({
+                                            error:false,
+                                            data: result[1]
+                                        });
+                                    }
+                                });
+                            } catch(err){
+                                res.send({
+                                    error:true,
+                                    data:"file location not found"
+                                });
+                            }
                         }
                     });
                 }
