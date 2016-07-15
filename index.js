@@ -113,7 +113,7 @@ function run(){
                         data: "no file found"
                     });
                 } else {
-                    var reference = uuid({rng: uuid.nodeRNG});
+                    var reference = req.query.r || uuid({rng: uuid.nodeRNG});
                     console.log(req.ip + " POST uuid:"+reference);
                     var insertData = schemaConstructor(body, req.file, reference);
 

@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f12ffbd7-d401-4479-9b4d-e5f7f11e214c" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.js" afterPath="$PROJECT_DIR$/index.js" />
     </list>
     <ignored path="image_database.iws" />
@@ -25,11 +27,11 @@
     <splitter split-orientation="horizontal" split-proportion="0.5">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="index.js" pinned="false" current-in-tab="true">
+          <file leaf-file-name="index.js" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/index.js">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="561">
-                  <caret line="198" column="22" selection-start-line="198" selection-start-column="22" selection-end-line="198" selection-end-column="22" />
+                <state relative-caret-position="176">
+                  <caret line="155" column="13" selection-start-line="155" selection-start-column="13" selection-end-line="155" selection-end-column="13" />
                   <folding />
                 </state>
               </provider>
@@ -42,11 +44,21 @@
               </provider>
               <provider selected="true" editor-type-id="split-provider[text-editor;MultiMarkdownPreviewEditor]">
                 <state split_layout="FIRST">
-                  <first_editor relative-caret-position="391">
-                    <caret line="23" column="10" selection-start-line="23" selection-start-column="10" selection-end-line="23" selection-end-column="10" />
+                  <first_editor relative-caret-position="498">
+                    <caret line="164" column="0" selection-start-line="157" selection-start-column="0" selection-end-line="164" selection-end-column="0" />
                     <folding />
                   </first_editor>
                   <second_editor />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="LICENSE" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/LICENSE">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="136">
+                  <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -119,9 +131,10 @@
         <option value="$PROJECT_DIR$/package.json" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/test.json" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/utils.js" />
         <option value="$PROJECT_DIR$/index.js" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/LICENSE" />
       </list>
     </option>
   </component>
@@ -268,12 +281,12 @@
       <option name="presentableId" value="Default" />
       <updated>1468046501691</updated>
       <workItem from="1468046507990" duration="78207000" />
-      <workItem from="1468561542467" duration="5150000" />
+      <workItem from="1468561542467" duration="7437000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="83357000" />
+    <option name="totallyTimeSpent" value="85644000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1932" height="1066" extended-state="0" />
@@ -396,6 +409,15 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/mediaStorage/1468239192442tv1lcw0lg.JPG" />
+    <entry file="file://$PROJECT_DIR$/utils.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="27" column="2" selection-start-line="27" selection-start-column="2" selection-end-line="27" selection-end-column="2" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/test.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="374">
@@ -404,11 +426,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mediaStorage/1468239192442tv1lcw0lg.JPG" />
-    <entry file="file://$PROJECT_DIR$/utils.js">
+    <entry file="file://$PROJECT_DIR$/index.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="27" column="2" selection-start-line="27" selection-start-column="2" selection-end-line="27" selection-end-column="2" />
+        <state relative-caret-position="176">
+          <caret line="155" column="13" selection-start-line="155" selection-start-column="13" selection-end-line="155" selection-end-column="13" />
           <folding />
         </state>
       </provider>
@@ -419,18 +440,18 @@
       </provider>
       <provider selected="true" editor-type-id="split-provider[text-editor;MultiMarkdownPreviewEditor]">
         <state split_layout="FIRST">
-          <first_editor relative-caret-position="391">
-            <caret line="23" column="10" selection-start-line="23" selection-start-column="10" selection-end-line="23" selection-end-column="10" />
+          <first_editor relative-caret-position="498">
+            <caret line="164" column="0" selection-start-line="157" selection-start-column="0" selection-end-line="164" selection-end-column="0" />
             <folding />
           </first_editor>
           <second_editor />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/index.js">
+    <entry file="file://$PROJECT_DIR$/LICENSE">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="198" column="22" selection-start-line="198" selection-start-column="22" selection-end-line="198" selection-end-column="22" />
+        <state relative-caret-position="136">
+          <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
           <folding />
         </state>
       </provider>
