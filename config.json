@@ -1,0 +1,7 @@
+{
+    "db_url":"mongodb://192.168.99.100",
+    "storage_location":"mediaStorage/",
+    "port": 80,
+    "db_collection":"mediaData"
+
+}

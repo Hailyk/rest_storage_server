@@ -1,11 +1,5 @@
 'use strict';
 
-// constants
-const db_url = 'mongodb://192.168.99.100',
-    storage_location = "mediaStorage/",
-    port = process.env.port || 80,
-    db_collection = 'mediaData';
-
 // dependency declaration
 var express = require('express'),
     mongoClient = require('mongodb').MongoClient,
@@ -13,13 +7,14 @@ var express = require('express'),
     utils = require('./utils'),
     async = require('async'),
     uuid = require('uuid'),
-    fs = require('fs');
+    fs = require('fs'),
+    config = require('./config');
 
 // instance variable
 var server = express(),
     upload = multer({storage: multer.diskStorage({
         destination: function (req, file, cb) {
-            cb(null, storage_location)
+            cb(null, config.storage_location)
         },
         filename: function (req, file, cb) {
             cb(null, utils.getRandomString(4)+
@@ -27,17 +22,18 @@ var server = express(),
                 utils.getRandomString(9)+
                 utils.getExtension(file.originalname))
         }
-    })});
+    })}),
+    port = process.env.port || config.port;
 
 run();
 
 function run(){
 
-    mongoClient.connect(db_url, (err, db)=> {
+    mongoClient.connect(config.db_url, (err, db)=> {
         if (err) {
             throw err
         } else {
-            var collection = db.collection(db_collection);
+            var collection = db.collection(config.db_collection);
 
 
             //get request
@@ -72,7 +68,7 @@ function run(){
                                 });
                             } else {
                                 var file = docs[0].filename;
-                                res.sendFile(__dirname+"/"+storage_location+file, (err)=>{
+                                res.sendFile(__dirname+"/"+config.storage_location+file, (err)=>{
                                    if(err){
                                        console.log(err);
                                    }
@@ -211,7 +207,7 @@ function run(){
                                 file = docs[0].filename;
                                 async.parallel([
                                     function(callback){
-                                        fs.unlink(__dirname+'/'+storage_location+file, (err, result)=>{
+                                        fs.unlink(__dirname+'/'+config.storage_location+file, (err, result)=>{
                                             callback(err, result);
                                         });
                                     },
