@@ -12,6 +12,7 @@ var express = require('express'),
     multer = require('multer'),
     utils = require('./utils'),
     async = require('async'),
+    uuid = require('uuid'),
     fs = require('fs');
 
 // instance variable
@@ -21,14 +22,17 @@ var server = express(),
             cb(null, storage_location)
         },
         filename: function (req, file, cb) {
-            cb(null, Date.now()+utils.getRandomString(9)+utils.getExtension(file.originalname))
+            cb(null, utils.getRandomString(4)+
+                Date.now()+
+                utils.getRandomString(9)+
+                utils.getExtension(file.originalname))
         }
     })});
 
 run();
 
 function run(){
-    
+
     mongoClient.connect(db_url, (err, db)=> {
         if (err) {
             throw err
@@ -107,7 +111,8 @@ function run(){
                         data: "no file found"
                     });
                 } else {
-                    var reference = Date.now() + utils.getRandomString(18);
+                    var reference = uuid({rng: uuid.nodeRNG});
+                    console.log(reference);
                     var insertData = schemaConstructor(body, req.file, reference);
 
                     collection.insertOne(insertData, (err)=> {
