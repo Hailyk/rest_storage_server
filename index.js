@@ -131,9 +131,7 @@ function run(){
             server.put('/', upload.single('media'), (req,res)=>{
                 var reference = req.query.r;
                 var query = req.query.q;
-
                 var body = JSON.parse(req.body.metainfo);
-
                 var filter = {};
 
                 var c = false;
@@ -172,7 +170,6 @@ function run(){
             server.delete('/',(req,res)=>{
                 var reference = req.query.r;
                 var query = req.query.q;
-
                 var filter = {};
 
                 var c = false;
