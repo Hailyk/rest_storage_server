@@ -46,6 +46,8 @@ function run(){
                 var query = req.query.q;
                 var type = req.query.t;
 
+                console.log(req.ip + " GET ");
+
                 if(reference != undefined){
                     if(type == "data"){
                         collection.find({reference:reference}).toArray((err,docs)=>{
@@ -112,7 +114,7 @@ function run(){
                     });
                 } else {
                     var reference = uuid({rng: uuid.nodeRNG});
-                    console.log(reference);
+                    console.log(req.ip + " POST uuid:"+reference);
                     var insertData = schemaConstructor(body, req.file, reference);
 
                     collection.insertOne(insertData, (err)=> {
@@ -155,6 +157,8 @@ function run(){
                 }
 
                 if(c){
+                    console.log(req.ip + " POST filter:"+filter);
+
                     collection.updateMany(filter, {$set: body}, (err, docs)=>{
                         if(err){
                             res.send({
@@ -193,6 +197,7 @@ function run(){
                 }
 
                 if(c){
+                    console.log(req.ip + " POST filter:"+filter);
                     collection.find(filter).toArray((err, docs)=>{
                         if(err){
                             res.send({
